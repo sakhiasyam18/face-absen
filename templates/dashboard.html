@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+        Face Attendance Dashboard
+    </title>
+
+    <style>
+
+        body{
+            font-family: Arial;
+            margin:20px;
+        }
+
+        table{
+            border-collapse: collapse;
+            width:100%;
+        }
+
+        th,td{
+            border:1px solid #ccc;
+            padding:10px;
+        }
+
+        th{
+            background:#f0f0f0;
+        }
+
+        #result{
+            margin-top:20px;
+            font-size:20px;
+            font-weight:bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>
+    Face Attendance Dashboard
+</h1>
+
+<a href="/register">
+    Register User
+</a>
+
+<hr>
+
+<h2>
+    Live Recognition
+</h2>
+
+<video
+    id="video"
+    width="640"
+    height="480"
+    autoplay
+></video>
+
+<div id="result">
+
+Waiting...
+
+</div>
+
+<hr>
+
+<h2>
+    Attendance Logs
+</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Name</th>
+<th>Employee ID</th>
+<th>Status</th>
+<th>Time</th>
+
+</tr>
+
+</thead>
+
+<tbody id="attendanceTable">
+
+</tbody>
+
+</table>
+
+<script>
+
+const video =
+document.getElementById(
+    "video"
+);
+
+navigator
+.mediaDevices
+.getUserMedia(
+{
+    video:true
+})
+.then(stream => {
+
+    video.srcObject =
+    stream;
+
+});
+
+const canvas =
+document.createElement(
+    "canvas"
+);
+
+// =====================
+// FACE RECOGNITION
+// =====================
+
+async function recognize(){
+
+    if(
+        video.videoWidth === 0
+    ){
+        return;
+    }
+
+    canvas.width =
+    video.videoWidth;
+
+    canvas.height =
+    video.videoHeight;
+
+    const ctx =
+    canvas.getContext(
+        "2d"
+    );
+
+    ctx.drawImage(
+        video,
+        0,
+        0
+    );
+
+    const image =
+    canvas.toDataURL(
+        "image/jpeg"
+    );
+
+    try{
+
+        const response =
+        await fetch(
+            "/api/recognize",
+            {
+                method:"POST",
+                headers:{
+                    "Content-Type":
+                    "application/json"
+                },
+                body:JSON.stringify(
+                    {
+                        image
+                    }
+                )
+            }
+        );
+
+        const result =
+        await response.json();
+
+        document
+        .getElementById(
+            "result"
+        )
+        .innerHTML =
+        JSON.stringify(
+            result,
+            null,
+            2
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            error
+        );
+
+    }
+
+}
+
+// =====================
+// ATTENDANCE TABLE
+// =====================
+
+async function loadAttendance(){
+
+    try{
+
+        const response =
+        await fetch(
+            "/api/attendance"
+        );
+
+        const data =
+        await response.json();
+
+        let html = "";
+
+        data.forEach(row => {
+
+            html += `
+            <tr>
+                <td>${row.name}</td>
+                <td>${row.employee_id}</td>
+                <td>${row.status}</td>
+                <td>${row.time}</td>
+            </tr>
+            `;
+
+        });
+
+        document
+        .getElementById(
+            "attendanceTable"
+        )
+        .innerHTML =
+        html;
+
+    }
+    catch(error){
+
+        console.error(
+            error
+        );
+
+    }
+
+}
+
+// =====================
+// AUTO REFRESH
+// =====================
+
+setInterval(
+    recognize,
+    3000
+);
+
+setInterval(
+    loadAttendance,
+    3000
+);
+
+loadAttendance();
+
+</script>
+
+</body>
+
+</html>

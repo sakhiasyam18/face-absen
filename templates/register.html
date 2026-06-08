@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        Register User
+    </title>
+</head>
+
+<body>
+
+<h1>
+    Register User
+</h1>
+
+<input
+    id="name"
+    placeholder="Name">
+
+<br><br>
+
+<input
+    id="employee_id"
+    placeholder="Employee ID">
+
+<br><br>
+
+<button onclick="registerUser()">
+
+Register Face
+
+</button>
+
+<script>
+
+async function registerUser(){
+
+    const name =
+    document.getElementById(
+        "name"
+    ).value;
+
+    const employee_id =
+    document.getElementById(
+        "employee_id"
+    ).value;
+
+    const response =
+    await fetch(
+        "/api/register",
+        {
+            method:"POST",
+            headers:{
+                "Content-Type":
+                "application/json"
+            },
+            body:JSON.stringify(
+                {
+                    name,
+                    employee_id
+                }
+            )
+        }
+    );
+
+    const result =
+    await response.json();
+
+    alert(
+        result.message
+    );
+}
+
+</script>
+
+</body>
+
+</html>
